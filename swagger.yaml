@@ -1,0 +1,500 @@
+openapi: 3.0.3
+info:
+  title: PetID API
+  version: 1.0.0
+  description: |
+    API định danh thú cưng: tạo thú cưng -> sinh petCode + QR (Cloudinary) -> public scan -> log + email notify.
+servers:
+  - url: http://localhost:5000
+    description: Local
+  - url: https://api.yourdomain.com
+    description: Production
+
+tags:
+  - name: Auth
+  - name: Pets
+  - name: Public
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+      required: [message]
+
+    AuthRegisterRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          example: test@gmail.com
+        password:
+          type: string
+          minLength: 6
+          example: "123456"
+        fullName:
+          type: string
+          example: "Nguyễn Văn A"
+      required: [email, password]
+
+    AuthRegisterResponse:
+      type: object
+      properties:
+        userId:
+          type: string
+          example: "65a1b2c3d4e5f67890123456"
+      required: [userId]
+
+    AuthLoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          example: test@gmail.com
+        password:
+          type: string
+          example: "123456"
+      required: [email, password]
+
+    AuthLoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      required: [token]
+
+    Pet:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: "65b2c3d4e5f6789012345678"
+        ownerId:
+          type: string
+          example: "65a1b2c3d4e5f67890123456"
+        petCode:
+          type: string
+          example: "PET-8K2F9Q"
+        name:
+          type: string
+          example: "Milo"
+        species:
+          type: string
+          enum: [dog, cat, other]
+          example: dog
+        breed:
+          type: string
+          example: "Poodle"
+        gender:
+          type: string
+          enum: [male, female, unknown]
+          example: unknown
+        color:
+          type: string
+          example: "Nâu"
+        weight:
+          type: number
+          example: 3.2
+        photos:
+          type: array
+          items:
+            type: string
+          example:
+            - "https://..."
+        medicalNotes:
+          type: string
+          example: "Dị ứng hải sản"
+        isLost:
+          type: boolean
+          example: false
+        lostStatus:
+          type: object
+          properties:
+            lostAt:
+              type: string
+              format: date-time
+              nullable: true
+            lostLocationText:
+              type: string
+              nullable: true
+            lastSeenNote:
+              type: string
+              nullable: true
+            reward:
+              type: number
+              nullable: true
+        publicContactMode:
+          type: string
+          enum: [show_phone, hide_phone_form_only, show_email, form_only]
+          example: hide_phone_form_only
+        qr:
+          type: object
+          properties:
+            qrText:
+              type: string
+              example: "https://yourdomain.com/p/PET-8K2F9Q"
+            qrImageUrl:
+              type: string
+              example: "https://res.cloudinary.com/.../image/upload/v.../petid/qr/PET-8K2F9Q.png"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CreatePetRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "Milo"
+        species:
+          type: string
+          enum: [dog, cat, other]
+          example: dog
+        breed:
+          type: string
+          example: "Poodle"
+        gender:
+          type: string
+          enum: [male, female, unknown]
+          example: unknown
+        color:
+          type: string
+          example: "Trắng"
+        weight:
+          type: number
+          example: 2.5
+        photos:
+          type: array
+          items:
+            type: string
+          example:
+            - "https://..."
+      required: [name, species]
+
+    CreatePetResponse:
+      type: object
+      properties:
+        pet:
+          $ref: "#/components/schemas/Pet"
+      required: [pet]
+
+    ListPetsResponse:
+      type: object
+      properties:
+        pets:
+          type: array
+          items:
+            $ref: "#/components/schemas/Pet"
+      required: [pets]
+
+    PublicPet:
+      type: object
+      properties:
+        petCode:
+          type: string
+          example: "PET-8K2F9Q"
+        name:
+          type: string
+          example: "Milo"
+        species:
+          type: string
+          enum: [dog, cat, other]
+        breed:
+          type: string
+        gender:
+          type: string
+          enum: [male, female, unknown]
+        color:
+          type: string
+        photos:
+          type: array
+          items:
+            type: string
+        isLost:
+          type: boolean
+        lostStatus:
+          type: object
+          additionalProperties: true
+        publicContactMode:
+          type: string
+          enum: [show_phone, hide_phone_form_only, show_email, form_only]
+        qr:
+          type: object
+          properties:
+            qrText:
+              type: string
+            qrImageUrl:
+              type: string
+
+    GetPublicPetResponse:
+      type: object
+      properties:
+        pet:
+          $ref: "#/components/schemas/PublicPet"
+      required: [pet]
+
+    CreateScanRequest:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Mình thấy bé ở công viên, bạn liên hệ mình nhé."
+        contact:
+          type: string
+          example: "0909xxxxxx"
+      additionalProperties: false
+
+    CreateScanResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        scanId:
+          type: string
+          example: "65c3d4e5f678901234567890"
+      required: [ok, scanId]
+
+paths:
+  /api/auth/register:
+    post:
+      tags: [Auth]
+      summary: Register user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthRegisterRequest"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthRegisterResponse"
+        "400":
+          description: Bad request (email exists, invalid input)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/auth/login:
+    post:
+      tags: [Auth]
+      summary: Login and get JWT
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthLoginRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthLoginResponse"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/pets:
+    post:
+      tags: [Pets]
+      summary: Create a pet (auto petCode + generate QR + upload Cloudinary)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePetRequest"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreatePetResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    get:
+      tags: [Pets]
+      summary: Get my pets
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListPetsResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/pets/{id}/mark-lost:
+    patch:
+      tags: [Pets]
+      summary: Mark pet as lost
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          example: "65b2c3d4e5f6789012345678"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    example: true
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Pet not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/pets/{id}/mark-found:
+    patch:
+      tags: [Pets]
+      summary: Mark pet as found
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          example: "65b2c3d4e5f6789012345678"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    example: true
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Pet not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /p/{petCode}:
+    get:
+      tags: [Public]
+      summary: Public view of pet by petCode
+      parameters:
+        - in: path
+          name: petCode
+          required: true
+          schema:
+            type: string
+          example: "PET-8K2F9Q"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetPublicPetResponse"
+        "404":
+          description: Pet not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /p/{petCode}/scan:
+    post:
+      tags: [Public]
+      summary: Create scan log and notify owner via email
+      parameters:
+        - in: path
+          name: petCode
+          required: true
+          schema:
+            type: string
+          example: "PET-8K2F9Q"
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateScanRequest"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateScanResponse"
+        "404":
+          description: Pet not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "429":
+          description: Too many requests (rate limit)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
