@@ -9,7 +9,6 @@ const publicRoutes = require("./routes/public.routes");
 const { swaggerUi, swaggerDocument } = require("./swagger");
 
 const app = express();
-app.use(cors());
 app.use(express.json());
 app.use(morgan("dev"));
 const allowlist = [
