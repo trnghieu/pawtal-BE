@@ -17,7 +17,7 @@ const allowlist = [
   "http://localhost:5000",
   "https://pawtal-be.onrender.com",
   "https://pawtal-fe.vercel.app"
-]
+];
 app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 app.use("/api/auth", authRoutes);
