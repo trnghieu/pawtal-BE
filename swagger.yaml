@@ -5,10 +5,10 @@ info:
   description: |
     API định danh thú cưng: tạo thú cưng -> sinh petCode + QR (Cloudinary) -> public scan -> log + email notify.
 servers:
+  - url: https://pawtal-be.onrender.com
+    description: Render
   - url: http://localhost:5000
     description: Local
-  - url: https://api.yourdomain.com
-    description: Production
 
 tags:
   - name: Auth
